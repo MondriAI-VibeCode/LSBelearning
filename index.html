@@ -1,1 +1,1738 @@
 
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROC Mondriaan | Lifestyle, Sport en Bewegen – Lesportaal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            mondriaan: {
+              purple: '#6B21A8',
+              magenta: '#D946EF',
+              orange: '#F97316',
+              teal: '#0D9488',
+              dark: '#0F172A'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      min-height: 100vh;
+    }
+    .tile-card {
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, opacity 0.2s ease;
+    }
+    .tile-card:hover {
+      transform: translateY(-4px);
+    }
+    .tile-dragging {
+      opacity: 0.45;
+      transform: scale(0.97);
+    }
+    .tile-drag-over {
+      outline: 3px dashed #7e22ce;
+      outline-offset: 4px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-purple-200 selection:text-purple-900">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      <!-- Brand / Logo -->
+      <div class="flex items-center gap-3.5 cursor-pointer" onclick="navigateToSubjects()">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-700 via-fuchsia-600 to-orange-500 flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+          M
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">ROC Mondriaan</span>
+            <span id="cloudStatusBadge" class="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Verbinden met cloud...
+            </span>
+          </div>
+          <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight leading-tight mt-0.5">
+            Lifestyle, Sport en Bewegen
+          </h1>
+        </div>
+      </div>
+
+      <!-- Search & Admin Controls -->
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <div class="relative hidden md:block w-64">
+          <input
+            type="text"
+            id="searchInput"
+            oninput="handleSearch(this.value)"
+            placeholder="Zoek vak, les of thema..."
+            class="w-full pl-9 pr-4 py-2 text-sm bg-slate-100 border border-transparent focus:bg-white focus:border-purple-500 rounded-xl outline-none transition"
+          />
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+
+        <div id="adminControls" class="flex items-center gap-2">
+          <button
+            id="loginBtn"
+            onclick="openLoginModal()"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-900 text-white hover:bg-purple-700 transition shadow-sm"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+            <span>Beheer</span>
+          </button>
+
+          <div id="adminActiveBar" class="hidden items-center gap-2">
+            <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Beheermodus actief (sleep tegels om te ordenen)
+            </span>
+            <button
+              onclick="logoutAdmin()"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-rose-100 text-rose-700 hover:bg-rose-200 transition"
+              title="Beheermodus sluiten"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              </svg>
+              <span class="hidden sm:inline">Uitloggen</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Search Bar -->
+    <div class="md:hidden px-4 pb-3">
+      <div class="relative">
+        <input
+          type="text"
+          id="mobileSearchInput"
+          oninput="handleSearch(this.value)"
+          placeholder="Zoek vak, les of thema..."
+          class="w-full pl-9 pr-4 py-2 text-sm bg-slate-100 border border-transparent focus:bg-white focus:border-purple-500 rounded-xl outline-none transition"
+        />
+        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- Cloud Error / Diagnostic Banner -->
+  <div id="cloudDiagnosticBanner" class="hidden bg-rose-50 border-b border-rose-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="flex items-start gap-2.5 text-sm text-rose-900">
+        <svg class="w-5 h-5 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <div>
+          <p class="font-bold">Cloud-verbinding (Firebase) nog niet actief — lokale weergave ingeladen</p>
+          <p id="cloudDiagnosticText" class="text-xs text-rose-700 mt-0.5">Controleer of Firestore Database is aangemaakt in Firebase.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="openFirewallHelpModal()" class="text-xs font-bold bg-rose-600 text-white px-3 py-1.5 rounded-lg hover:bg-rose-700 transition">
+          Oplossen in 2 stappen
+        </button>
+        <button onclick="retryCloudConnection()" class="text-xs font-semibold bg-white border border-rose-300 text-rose-800 px-3 py-1.5 rounded-lg hover:bg-rose-100 transition">
+          Opnieuw proberen
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Breadcrumb & Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div>
+        <nav id="breadcrumbNav" class="flex items-center gap-2 text-sm font-medium text-slate-500 mb-1">
+          <button onclick="navigateToSubjects()" class="hover:text-purple-700 transition flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            Alle Vakken
+          </button>
+          <span id="breadcrumbSeparator" class="hidden text-slate-300">/</span>
+          <span id="breadcrumbCurrent" class="hidden font-bold text-slate-900"></span>
+        </nav>
+        <h2 id="pageTitle" class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          Kies een vakgebied
+        </h2>
+        <p id="pageSubtitle" class="text-slate-500 text-sm sm:text-base mt-1">
+          Klik op een vak om de bijbehorende lessen, thema's en interactieve scripts te openen.
+        </p>
+      </div>
+
+      <!-- Contextual Action Buttons -->
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          id="backToSubjectsBtn"
+          onclick="navigateToSubjects()"
+          class="hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Terug naar vakken
+        </button>
+
+        <button
+          id="addSubjectBtn"
+          onclick="openSubjectModal()"
+          class="hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-700 to-fuchsia-600 text-white hover:opacity-95 transition shadow-md"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Nieuw vak toevoegen
+        </button>
+
+        <button
+          id="addLessonBtn"
+          onclick="openLessonModal()"
+          class="hidden inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-500 to-pink-600 text-white hover:opacity-95 transition shadow-md"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Nieuwe lestegel toevoegen
+        </button>
+
+        <button
+          onclick="openFirewallHelpModal()"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-white border border-slate-200 text-slate-600 hover:text-purple-700 hover:border-purple-200 transition shadow-sm"
+          title="Uitleg over Firebase Cloud-opslag"
+        >
+          <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+          </svg>
+          <span class="hidden sm:inline">Cloud-status & Hulp</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingState" class="flex flex-col items-center justify-center py-20">
+      <div class="w-12 h-12 border-4 border-purple-200 border-t-purple-700 rounded-full animate-spin mb-4"></div>
+      <p class="text-slate-500 font-medium">Lessen en vakken laden...</p>
+    </div>
+
+    <!-- Subjects Grid View -->
+    <section id="subjectsGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in"></section>
+
+    <!-- Lessons Grid View (inside a selected Subject) -->
+    <section id="lessonsGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in"></section>
+
+    <!-- Search Results Grid View -->
+    <section id="searchResultsSection" class="hidden space-y-6 animate-fade-in">
+      <div id="searchSubjectsContainer" class="hidden">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Gevonden vakken</h3>
+        <div id="searchSubjectsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </div>
+      <div id="searchLessonsContainer" class="hidden">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Gevonden lessen & thema's</h3>
+        <div id="searchLessonsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </div>
+      <div id="noSearchResults" class="hidden text-center py-16 bg-white rounded-3xl border border-slate-200/80">
+        <p class="text-lg font-bold text-slate-700">Geen resultaten gevonden</p>
+        <p class="text-sm text-slate-500 mt-1">Probeer een andere zoekterm voor een vak, les of thema.</p>
+      </div>
+    </section>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-16 bg-white rounded-3xl border border-dashed border-slate-300">
+      <div class="w-16 h-16 mx-auto bg-purple-100 text-purple-700 rounded-2xl flex items-center justify-center mb-4">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+      </div>
+      <h3 id="emptyStateTitle" class="text-lg font-bold text-slate-800">Nog geen items toegevoegd</h3>
+      <p id="emptyStateSubtitle" class="text-sm text-slate-500 max-w-md mx-auto mt-1">
+        Log in via de knop <strong>Beheer</strong> rechtsboven om vakken en interactieve lestegels aan te maken.
+      </p>
+    </div>
+
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- 1. Admin Login Modal -->
+  <div id="loginModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 animate-fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-900">Beheerdersmodule</h3>
+            <p class="text-xs text-slate-500">ROC Mondriaan – Lifestyle, Sport en Bewegen</p>
+          </div>
+        </div>
+        <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5">Beheerderswachtwoord</label>
+          <input
+            type="password"
+            id="adminPasswordInput"
+            required
+            placeholder="Voer wachtwoord in..."
+            class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 outline-none transition text-slate-900"
+          />
+          <p id="loginErrorMsg" class="hidden text-xs font-semibold text-rose-600 mt-2">
+            Onjuist wachtwoord. Probeer het opnieuw.
+          </p>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" onclick="closeLoginModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+            Annuleren
+          </button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-purple-700 text-white hover:bg-purple-800 transition shadow-md">
+            Inloggen als beheerder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Subject Add / Edit Modal -->
+  <div id="subjectModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 animate-fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <h3 id="subjectModalTitle" class="text-xl font-extrabold text-slate-900">Nieuw vak toevoegen</h3>
+        <button onclick="closeSubjectModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form onsubmit="saveSubject(event)" class="space-y-5">
+        <input type="hidden" id="editSubjectId" />
+
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5">Naam van het vak *</label>
+          <input
+            type="text"
+            id="subjectNameInput"
+            required
+            placeholder="Bijv. Anatomie & Fysiologie, Trainingsleer, EHBO..."
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 outline-none transition"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5">Korte omschrijving</label>
+          <input
+            type="text"
+            id="subjectDescInput"
+            placeholder="Bijv. Interactieve opdrachten en lesmodules voor leerjaar 1 & 2"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 outline-none transition"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">Kies een icoon</label>
+          <div id="iconPicker" class="grid grid-cols-6 gap-2"></div>
+          <input type="hidden" id="subjectIconInput" value="🏃" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">Kies een tegelkleur</label>
+          <div id="subjectColorPicker" class="grid grid-cols-4 sm:grid-cols-6 gap-2.5"></div>
+          <input type="hidden" id="subjectColorInput" value="purple" />
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeSubjectModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+            Annuleren
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-purple-700 text-white hover:bg-purple-800 transition shadow-md">
+            Vak opslaan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Lesson Tile Add / Edit Modal -->
+  <div id="lessonModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-slate-100 animate-fade-in">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 id="lessonModalTitle" class="text-xl font-extrabold text-slate-900">Nieuwe lestegel</h3>
+          <p id="lessonModalSubjectLabel" class="text-xs font-semibold text-purple-700 mt-0.5"></p>
+        </div>
+        <button onclick="closeLessonModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form onsubmit="saveLesson(event)" class="space-y-4">
+        <input type="hidden" id="editLessonId" />
+        <input type="hidden" id="lessonTypeInput" value="url" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5">Welke les? (Titel) *</label>
+            <input
+              type="text"
+              id="lessonTitleInput"
+              required
+              placeholder="Bijv. Les 3: Hartslagzones"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 outline-none transition"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-1.5">Welk thema wordt besproken? *</label>
+            <input
+              type="text"
+              id="lessonThemeInput"
+              required
+              placeholder="Bijv. Karvonen-formule & duurtraining"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 outline-none transition"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">Wat wil je koppelen aan deze tegel? *</label>
+          <div class="grid grid-cols-2 gap-2.5 p-1.5 bg-slate-100 rounded-2xl">
+            <button
+              type="button"
+              id="tabTypeUrl"
+              onclick="switchLessonContentType('url')"
+              class="py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition bg-white text-purple-700 shadow-sm"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+              </svg>
+              Link naar website (URL)
+            </button>
+            <button
+              type="button"
+              id="tabTypeScript"
+              onclick="switchLessonContentType('script')"
+              class="py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition text-slate-600 hover:text-slate-900"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+              </svg>
+              Eigen HTML/JS script plakken
+            </button>
+          </div>
+        </div>
+
+        <div id="urlInputContainer">
+          <label class="block text-sm font-bold text-slate-700 mb-1.5">Website-adres (URL) *</label>
+          <input
+            type="url"
+            id="lessonUrlInput"
+            placeholder="https://jouw-interactieve-script.nl"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 outline-none transition font-mono text-sm"
+          />
+          <p class="text-xs text-slate-400 mt-1">Opent de website op een nieuw tabblad wanneer er op de tegel wordt geklikt.</p>
+        </div>
+
+        <div id="scriptInputContainer" class="hidden space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-sm font-bold text-slate-700">Plak hier je volledige HTML-script *</label>
+            <div class="flex items-center gap-2">
+              <label class="cursor-pointer text-xs font-semibold text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-2.5 py-1 rounded-lg transition">
+                <span>📂 .html bestand laden</span>
+                <input type="file" accept=".html,.htm,.txt" onchange="loadHtmlFileIntoTextarea(event)" class="hidden" />
+              </label>
+              <button
+                type="button"
+                onclick="previewDraftScript()"
+                class="text-xs font-semibold text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 px-2.5 py-1 rounded-lg transition"
+              >
+                👁️ Test script
+              </button>
+            </div>
+          </div>
+          <textarea
+            id="lessonScriptInput"
+            rows="7"
+            placeholder="<!DOCTYPE html>&#10;<html>&#10;  <body>&#10;    <h1>Mijn interactieve les</h1>&#10;  </body>&#10;</html>"
+            class="w-full p-3.5 rounded-xl border border-slate-300 focus:border-purple-600 focus:ring-2 focus:ring-purple-200 outline-none transition font-mono text-xs bg-slate-900 text-emerald-300 leading-relaxed"
+          ></textarea>
+          <div class="flex items-center justify-between text-xs text-slate-500">
+            <span>Wordt opgeslagen in de cloud en opent direct als webpagina op een nieuw tabblad.</span>
+            <span id="scriptSizeIndicator" class="font-mono text-slate-400">0 KB</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">Kies een mooie tegelkleur</label>
+          <div id="lessonColorPicker" class="grid grid-cols-4 sm:grid-cols-8 gap-2.5"></div>
+          <input type="hidden" id="lessonColorInput" value="teal" />
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeLessonModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+            Annuleren
+          </button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-orange-500 to-pink-600 text-white hover:opacity-95 transition shadow-md">
+            Lestegel opslaan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Firebase / Cloud Storage Guide Modal -->
+  <div id="firewallHelpModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl border border-slate-100 animate-fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-extrabold text-slate-900">Cloud-opslag (Firebase Firestore)</h3>
+            <p class="text-xs text-slate-500">Gekoppeld aan project: <strong>lessen-opslag</strong></p>
+          </div>
+        </div>
+        <button onclick="closeFirewallHelpModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-sm text-slate-600 leading-relaxed">
+        <div class="p-4 rounded-2xl bg-purple-50 border border-purple-100 text-purple-900">
+          <strong>Volgorde aanpassen:</strong> Log in via <strong>Beheer</strong> (`mon1234!`). Je kunt daarna zowel vakken als lestegels slepen met je muis of verplaatsen met de pijltjesknoppen. De volgorde wordt direct in Firebase opgeslagen.
+        </div>
+
+        <h4 class="font-bold text-slate-900 text-base pt-2">Toegangsrechten (Rules) in Firebase:</h4>
+        <pre class="p-3 rounded-xl bg-slate-900 text-emerald-300 text-xs overflow-x-auto font-mono">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-100">
+        <button onclick="retryCloudConnection(); closeFirewallHelpModal();" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-purple-100 text-purple-800 hover:bg-purple-200 transition">
+          Verbinding opnieuw testen
+        </button>
+        <button onclick="closeFirewallHelpModal()" class="px-5 py-2.5 rounded-xl text-sm font-bold bg-slate-900 text-white hover:bg-slate-800 transition">
+          Sluiten
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-semibold">
+      <span id="toastIcon" class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+      <span id="toastMessage">Opgeslagen!</span>
+    </div>
+  </div>
+
+  <!-- ==================== FIREBASE & APP LOGIC ==================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      doc,
+      setDoc,
+      deleteDoc,
+      getDocs,
+      onSnapshot,
+      writeBatch
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const TILE_COLORS = {
+      purple:  { name: 'Mondriaan Paars', bg: 'from-purple-600 to-indigo-700', swatch: 'bg-purple-600' },
+      magenta: { name: 'Magenta',         bg: 'from-fuchsia-600 to-pink-600',  swatch: 'bg-fuchsia-600' },
+      orange:  { name: 'Sport Oranje',    bg: 'from-orange-500 to-amber-600',  swatch: 'bg-orange-500' },
+      teal:    { name: 'Fris Teal',       bg: 'from-teal-500 to-emerald-600',  swatch: 'bg-teal-500' },
+      blue:    { name: 'Oceaan Blauw',    bg: 'from-blue-600 to-cyan-600',     swatch: 'bg-blue-600' },
+      rose:    { name: 'Koraal Rood',     bg: 'from-rose-500 to-red-600',      swatch: 'bg-rose-500' },
+      emerald: { name: 'Smaragd Groen',   bg: 'from-emerald-500 to-green-600', swatch: 'bg-emerald-500' },
+      amber:   { name: 'Zonnig Goud',     bg: 'from-amber-500 to-yellow-600',  swatch: 'bg-amber-500' }
+    };
+
+    const SUBJECT_ICONS = ['🏃', '⚽', '💪', '🧠', '❤️', '🥗', '🏋️', '🩹', '📋', '🎯', '🤖', '🚴'];
+
+    const DEFAULT_SUBJECTS = [
+      { id: 'vak-anatomie', name: 'Anatomie & Fysiologie', description: 'Spieren, botten, hart-longsysteem en energiesystemen', icon: '❤️', color: 'rose', order: 0 },
+      { id: 'vak-trainingsleer', name: 'Trainingsleer', description: 'Supercompensatie, trainingsprincipes en periodisering', icon: '💪', color: 'orange', order: 1 },
+      { id: 'vak-sportpsychologie', name: 'Sportpsychologie & Coaching', description: 'Motivatie, groepsdynamica en coachen van sporters', icon: '🧠', color: 'purple', order: 2 },
+      { id: 'vak-ehbo', name: 'EHBO & Blessurepreventie', description: 'Eerste hulp bij sportongevallen, tapen en herstel', icon: '🩹', color: 'teal', order: 3 },
+      { id: 'vak-ai-sport', name: 'AI & Sportinnovatie', description: 'Slimme data-analyse, wearables en AI-toepassingen in de sport', icon: '🤖', color: 'blue', order: 4 },
+      { id: 'vak-lob', name: 'Loopbaan & Burgerschap', description: 'Beroepshouding, reflectie en stagevoorbereiding (BPV)', icon: '🎯', color: 'magenta', order: 5 }
+    ];
+
+    const SAMPLE_INTERACTIVE_SCRIPT = `<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hartslagzones Calculator – ROC Mondriaan</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-6 font-sans">
+  <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-8">
+    <span class="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-3 py-1 rounded-full">ROC Mondriaan LSB</span>
+    <h1 class="text-2xl font-extrabold text-slate-900 mt-3">Karvonen Hartslagzones</h1>
+    <p class="text-sm text-slate-500 mt-1">Bereken direct de trainingszones van jouw sporter.</p>
+    <div class="space-y-4 mt-6">
+      <div>
+        <label class="block text-sm font-bold text-slate-700">Leeftijd (jaren)</label>
+        <input id="age" type="number" value="18" class="w-full mt-1 px-4 py-2 border rounded-xl" oninput="calc()" />
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-slate-700">Rusthartslag (slagen/min)</label>
+        <input id="rest" type="number" value="62" class="w-full mt-1 px-4 py-2 border rounded-xl" oninput="calc()" />
+      </div>
+    </div>
+    <div id="output" class="mt-6 space-y-2"></div>
+  </div>
+  <script>
+    function calc() {
+      const age = Number(document.getElementById('age').value) || 18;
+      const rest = Number(document.getElementById('rest').value) || 60;
+      const max = 220 - age;
+      const reserve = max - rest;
+      const zones = [
+        { name: 'Zone 1 – Herstel (50-60%)', min: 0.5, max: 0.6, color: 'bg-sky-100 text-sky-900' },
+        { name: 'Zone 2 – Extensief duur (60-70%)', min: 0.6, max: 0.7, color: 'bg-emerald-100 text-emerald-900' },
+        { name: 'Zone 3 – Intensief duur (70-80%)', min: 0.7, max: 0.8, color: 'bg-amber-100 text-amber-900' },
+        { name: 'Zone 4 – Weerstand (80-90%)', min: 0.8, max: 0.9, color: 'bg-orange-100 text-orange-900' },
+        { name: 'Zone 5 – Maximaal (90-100%)', min: 0.9, max: 1.0, color: 'bg-rose-100 text-rose-900' }
+      ];
+      document.getElementById('output').innerHTML =
+        '<p class="text-xs font-bold text-slate-500 mb-2">Maximale hartslag (HFmax): ' + max + ' bpm</p>' +
+        zones.map(z => {
+          const low = Math.round(rest + reserve * z.min);
+          const high = Math.round(rest + reserve * z.max);
+          return '<div class="p-3 rounded-xl font-semibold text-sm flex justify-between ' + z.color + '"><span>' + z.name + '</span><span>' + low + ' – ' + high + ' bpm</span></div>';
+        }).join('');
+    }
+    calc();
+  <\/script>
+</body>
+</html>`;
+
+    const DEFAULT_LESSONS = [
+      { id: 'les-1', subjectId: 'vak-anatomie', title: 'Les 1: Het Skelet & Gewrichten', theme: 'Bouw en functie van het menselijk bewegingsapparaat', contentType: 'url', url: 'https://www.roc-mondriaan.nl', scriptContent: '', color: 'rose', order: 0 },
+      { id: 'les-2', subjectId: 'vak-trainingsleer', title: 'Les 1: Interactieve Hartslagzone Calculator', theme: 'Karvonen-formule & trainingszones (ingebouwd script voorbeeld)', contentType: 'script', url: '', scriptContent: SAMPLE_INTERACTIVE_SCRIPT, color: 'teal', order: 0 },
+      { id: 'les-3', subjectId: 'vak-trainingsleer', title: 'Les 2: Wet van Supercompensatie', theme: 'Balans tussen belasting, herstel en prestatieverbetering', contentType: 'url', url: 'https://www.roc-mondriaan.nl', scriptContent: '', color: 'amber', order: 1 },
+      { id: 'les-4', subjectId: 'vak-ai-sport', title: 'Les 1: AI-Prompting voor Trainingsschema’s', theme: 'Kritisch kijken naar door AI gegenereerde sportschema’s', contentType: 'url', url: 'https://www.roc-mondriaan.nl', scriptContent: '', color: 'blue', order: 0 }
+    ];
+
+    let subjects = [];
+    let lessons = [];
+    let currentSubjectId = null;
+    let isAdmin = sessionStorage.getItem('mondriaan_lsb_admin') === 'true';
+    let searchQuery = '';
+    let useCloud = false;
+    let db = null;
+    let appId = 'mondriaan-lsb-portaal';
+    let unsubscribeSubjects = null;
+    let unsubscribeLessons = null;
+
+    // Drag & Drop State
+    let draggedId = null;
+    let draggedType = null; // 'subject' | 'lesson'
+
+    const YOUR_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyAEra8yjWngx8Bm31EkUUt81E8XFAW3qxI",
+      authDomain: "lessen-opslag.firebaseapp.com",
+      databaseURL: "https://lessen-opslag-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "lessen-opslag",
+      storageBucket: "lessen-opslag.firebasestorage.app",
+      messagingSenderId: "394896650861",
+      appId: "1:394896650861:web:13ace4254eb43bb6eb4564",
+      measurementId: "G-QEJC0M9B8G"
+    };
+
+    async function initStorage() {
+      if (unsubscribeSubjects) { unsubscribeSubjects(); unsubscribeSubjects = null; }
+      if (unsubscribeLessons) { unsubscribeLessons(); unsubscribeLessons = null; }
+
+      let firebaseConfig = null;
+      if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+        firebaseConfig = JSON.parse(__firebase_config);
+        appId = typeof __app_id !== 'undefined' ? __app_id : 'mondriaan-lsb-portaal';
+      } else if (YOUR_FIREBASE_CONFIG.apiKey) {
+        firebaseConfig = YOUR_FIREBASE_CONFIG;
+        appId = 'mondriaan-lsb-portaal';
+      }
+
+      if (firebaseConfig) {
+        try {
+          const app = initializeApp(firebaseConfig);
+          const auth = getAuth(app);
+          db = getFirestore(app);
+
+          try {
+            const authPromise = (typeof __initial_auth_token !== 'undefined' && __initial_auth_token)
+              ? signInWithCustomToken(auth, __initial_auth_token)
+              : signInAnonymously(auth);
+            await Promise.race([
+              authPromise,
+              new Promise((_, reject) => setTimeout(() => reject(new Error('auth-timeout')), 4000))
+            ]);
+          } catch (authErr) {
+            console.warn("Auth overgeslagen of niet ingeschakeld, directe Firestore toegang...", authErr.message);
+          }
+
+          await setupFirestoreListeners();
+        } catch (err) {
+          handleCloudFailure(err.message || "Kan geen verbinding maken met Firebase.");
+        }
+      } else {
+        loadFromLocalStorage();
+        updateCloudBadge(false, 'Lokaal opgeslagen');
+      }
+    }
+
+    function getCollectionRefs() {
+      if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+        return {
+          subjectsRef: collection(db, 'artifacts', appId, 'public', 'data', 'subjects'),
+          lessonsRef: collection(db, 'artifacts', appId, 'public', 'data', 'lessons')
+        };
+      }
+      return {
+        subjectsRef: collection(db, 'mondriaan_lsb_subjects'),
+        lessonsRef: collection(db, 'mondriaan_lsb_lessons')
+      };
+    }
+
+    async function setupFirestoreListeners() {
+      const { subjectsRef, lessonsRef } = getCollectionRefs();
+      let resolvedInitial = false;
+      const connectionTimeout = setTimeout(() => {
+        if (!resolvedInitial) {
+          handleCloudFailure("Time-out bij ophalen uit Firestore. Controleer of Firestore Database is aangemaakt in Firebase Console.");
+        }
+      }, 5000);
+
+      try {
+        const initialSnap = await getDocs(subjectsRef);
+        resolvedInitial = true;
+        clearTimeout(connectionTimeout);
+
+        useCloud = true;
+        hideDiagnosticBanner();
+        updateCloudBadge(true, 'Cloud (lessen-opslag)');
+
+        if (initialSnap.empty) {
+          for (const s of DEFAULT_SUBJECTS) await setDoc(doc(subjectsRef, s.id), s);
+          for (const l of DEFAULT_LESSONS) await setDoc(doc(lessonsRef, l.id), l);
+        }
+
+        unsubscribeSubjects = onSnapshot(subjectsRef, (snapshot) => {
+          subjects = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          subjects.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+          renderCurrentView();
+        }, (err) => handleCloudFailure(err.message));
+
+        unsubscribeLessons = onSnapshot(lessonsRef, (snapshot) => {
+          lessons = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          lessons.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+          renderCurrentView();
+        });
+      } catch (err) {
+        resolvedInitial = true;
+        clearTimeout(connectionTimeout);
+        let friendlyMsg = err.message || "Toegang geweigerd of database ontbreekt.";
+        if (err.code === 'permission-denied') {
+          friendlyMsg = "Toegang geweigerd (Permission Denied). Zet in Firestore onder 'Rules' allow read, write: if true;";
+        } else if (err.code === 'not-found' || friendlyMsg.includes('not found')) {
+          friendlyMsg = "Firestore Database bestaat nog niet. Klik in Firebase op Build > Firestore Database > Create database.";
+        }
+        handleCloudFailure(friendlyMsg);
+      }
+    }
+
+    function handleCloudFailure(reason) {
+      useCloud = false;
+      updateCloudBadge(false, 'Offline / Lokaal');
+      const banner = document.getElementById('cloudDiagnosticBanner');
+      document.getElementById('cloudDiagnosticText').textContent = reason;
+      banner.classList.remove('hidden');
+      loadFromLocalStorage();
+    }
+
+    function hideDiagnosticBanner() {
+      document.getElementById('cloudDiagnosticBanner').classList.add('hidden');
+    }
+
+    window.retryCloudConnection = function() {
+      updateCloudBadge(false, 'Opnieuw verbinden...');
+      document.getElementById('loadingState').classList.remove('hidden');
+      document.getElementById('subjectsGrid').classList.add('hidden');
+      document.getElementById('lessonsGrid').classList.add('hidden');
+      initStorage();
+    };
+
+    function loadFromLocalStorage() {
+      const savedSubjects = localStorage.getItem('mondriaan_lsb_subjects');
+      const savedLessons = localStorage.getItem('mondriaan_lsb_lessons');
+      if (savedSubjects && savedLessons) {
+        subjects = JSON.parse(savedSubjects);
+        lessons = JSON.parse(savedLessons);
+      } else {
+        subjects = [...DEFAULT_SUBJECTS];
+        lessons = [...DEFAULT_LESSONS];
+        saveToLocalStorage();
+      }
+      subjects.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+      lessons.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+      renderCurrentView();
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('mondriaan_lsb_subjects', JSON.stringify(subjects));
+      localStorage.setItem('mondriaan_lsb_lessons', JSON.stringify(lessons));
+    }
+
+    function updateCloudBadge(isOnline, label) {
+      const badge = document.getElementById('cloudStatusBadge');
+      if (isOnline) {
+        badge.className = 'inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> ${label}`;
+      } else {
+        badge.className = 'inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span> ${label}`;
+      }
+    }
+
+    // ==================== REORDERING LOGIC (DRAG & DROP + ARROWS) ====================
+    window.handleDragStart = function(event, id, type) {
+      if (!isAdmin) return;
+      draggedId = id;
+      draggedType = type;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', id);
+      event.currentTarget.classList.add('tile-dragging');
+    };
+
+    window.handleDragEnd = function(event) {
+      event.currentTarget.classList.remove('tile-dragging');
+      document.querySelectorAll('.tile-drag-over').forEach(el => el.classList.remove('tile-drag-over'));
+      draggedId = null;
+      draggedType = null;
+    };
+
+    window.handleDragOver = function(event, targetId, targetType) {
+      if (!isAdmin || !draggedId || draggedType !== targetType || draggedId === targetId) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      event.currentTarget.classList.add('tile-drag-over');
+    };
+
+    window.handleDragLeave = function(event) {
+      event.currentTarget.classList.remove('tile-drag-over');
+    };
+
+    window.handleDrop = async function(event, targetId, targetType) {
+      event.preventDefault();
+      event.currentTarget.classList.remove('tile-drag-over');
+      if (!isAdmin || !draggedId || draggedType !== targetType || draggedId === targetId) return;
+
+      if (targetType === 'subject') {
+        const list = [...subjects];
+        const fromIdx = list.findIndex(s => s.id === draggedId);
+        const toIdx = list.findIndex(s => s.id === targetId);
+        if (fromIdx < 0 || toIdx < 0) return;
+        const [moved] = list.splice(fromIdx, 1);
+        list.splice(toIdx, 0, moved);
+        await saveNewSubjectOrder(list);
+      } else if (targetType === 'lesson') {
+        const subjectLessons = lessons.filter(l => l.subjectId === currentSubjectId);
+        const fromIdx = subjectLessons.findIndex(l => l.id === draggedId);
+        const toIdx = subjectLessons.findIndex(l => l.id === targetId);
+        if (fromIdx < 0 || toIdx < 0) return;
+        const [moved] = subjectLessons.splice(fromIdx, 1);
+        subjectLessons.splice(toIdx, 0, moved);
+        await saveNewLessonOrder(subjectLessons);
+      }
+    };
+
+    window.moveSubjectStep = async function(subjectId, direction) {
+      if (!isAdmin) return;
+      const list = [...subjects];
+      const idx = list.findIndex(s => s.id === subjectId);
+      const newIdx = idx + direction;
+      if (idx < 0 || newIdx < 0 || newIdx >= list.length) return;
+      const [moved] = list.splice(idx, 1);
+      list.splice(newIdx, 0, moved);
+      await saveNewSubjectOrder(list);
+    };
+
+    window.moveLessonStep = async function(lessonId, direction) {
+      if (!isAdmin || !currentSubjectId) return;
+      const subjectLessons = lessons.filter(l => l.subjectId === currentSubjectId);
+      const idx = subjectLessons.findIndex(l => l.id === lessonId);
+      const newIdx = idx + direction;
+      if (idx < 0 || newIdx < 0 || newIdx >= subjectLessons.length) return;
+      const [moved] = subjectLessons.splice(idx, 1);
+      subjectLessons.splice(newIdx, 0, moved);
+      await saveNewLessonOrder(subjectLessons);
+    };
+
+    async function saveNewSubjectOrder(orderedSubjects) {
+      orderedSubjects.forEach((s, index) => { s.order = index; });
+      subjects = orderedSubjects;
+
+      if (useCloud && db) {
+        const { subjectsRef } = getCollectionRefs();
+        const batch = writeBatch(db);
+        orderedSubjects.forEach(s => {
+          batch.set(doc(subjectsRef, s.id), s);
+        });
+        await batch.commit();
+      } else {
+        saveToLocalStorage();
+        renderCurrentView();
+      }
+      showToast('Volgorde van vakken opgeslagen');
+    }
+
+    async function saveNewLessonOrder(orderedSubjectLessons) {
+      orderedSubjectLessons.forEach((l, index) => { l.order = index; });
+      const otherLessons = lessons.filter(l => l.subjectId !== currentSubjectId);
+      lessons = [...otherLessons, ...orderedSubjectLessons].sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+
+      if (useCloud && db) {
+        const { lessonsRef } = getCollectionRefs();
+        const batch = writeBatch(db);
+        orderedSubjectLessons.forEach(l => {
+          batch.set(doc(lessonsRef, l.id), l);
+        });
+        await batch.commit();
+      } else {
+        saveToLocalStorage();
+        renderCurrentView();
+      }
+      showToast('Volgorde van lestegels opgeslagen');
+    }
+
+    // ==================== CRUD OPERATIONS ====================
+    async function persistSubject(subjectObj) {
+      if (useCloud && db) {
+        const { subjectsRef } = getCollectionRefs();
+        await setDoc(doc(subjectsRef, subjectObj.id), subjectObj);
+      } else {
+        const idx = subjects.findIndex(s => s.id === subjectObj.id);
+        if (idx >= 0) subjects[idx] = subjectObj;
+        else subjects.push(subjectObj);
+        saveToLocalStorage();
+        renderCurrentView();
+      }
+    }
+
+    async function removeSubject(subjectId) {
+      if (useCloud && db) {
+        const { subjectsRef, lessonsRef } = getCollectionRefs();
+        await deleteDoc(doc(subjectsRef, subjectId));
+        const relatedLessons = lessons.filter(l => l.subjectId === subjectId);
+        for (const l of relatedLessons) {
+          await deleteDoc(doc(lessonsRef, l.id));
+        }
+      } else {
+        subjects = subjects.filter(s => s.id !== subjectId);
+        lessons = lessons.filter(l => l.subjectId !== subjectId);
+        saveToLocalStorage();
+        renderCurrentView();
+      }
+    }
+
+    async function persistLesson(lessonObj) {
+      if (useCloud && db) {
+        const { lessonsRef } = getCollectionRefs();
+        await setDoc(doc(lessonsRef, lessonObj.id), lessonObj);
+      } else {
+        const idx = lessons.findIndex(l => l.id === lessonObj.id);
+        if (idx >= 0) lessons[idx] = lessonObj;
+        else lessons.push(lessonObj);
+        saveToLocalStorage();
+        renderCurrentView();
+      }
+    }
+
+    async function removeLesson(lessonId) {
+      if (useCloud && db) {
+        const { lessonsRef } = getCollectionRefs();
+        await deleteDoc(doc(lessonsRef, lessonId));
+      } else {
+        lessons = lessons.filter(l => l.id !== lessonId);
+        saveToLocalStorage();
+        renderCurrentView();
+      }
+    }
+
+    // ==================== NAVIGATION & RENDERING ====================
+    function renderCurrentView() {
+      document.getElementById('loadingState').classList.add('hidden');
+      updateAdminUI();
+
+      if (searchQuery.trim().length > 0) {
+        renderSearchResults();
+        return;
+      }
+
+      document.getElementById('searchResultsSection').classList.add('hidden');
+
+      if (!currentSubjectId) {
+        renderSubjectsView();
+      } else {
+        renderLessonsView(currentSubjectId);
+      }
+    }
+
+    function renderSubjectsView() {
+      const grid = document.getElementById('subjectsGrid');
+      const lessonsGrid = document.getElementById('lessonsGrid');
+      const emptyState = document.getElementById('emptyState');
+
+      lessonsGrid.classList.add('hidden');
+      document.getElementById('breadcrumbSeparator').classList.add('hidden');
+      document.getElementById('breadcrumbCurrent').classList.add('hidden');
+      document.getElementById('backToSubjectsBtn').classList.add('hidden');
+      document.getElementById('addLessonBtn').classList.add('hidden');
+
+      if (isAdmin) {
+        document.getElementById('addSubjectBtn').classList.remove('hidden');
+      } else {
+        document.getElementById('addSubjectBtn').classList.add('hidden');
+      }
+
+      document.getElementById('pageTitle').textContent = 'Kies een vakgebied';
+      document.getElementById('pageSubtitle').textContent = isAdmin
+        ? 'Sleep de vaktegels of gebruik de pijltjes om de volgorde te bepalen.'
+        : 'Klik op een vak om de bijbehorende lessen, thema’s en interactieve scripts te openen.';
+
+      if (subjects.length === 0) {
+        grid.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        document.getElementById('emptyStateTitle').textContent = 'Nog geen vakken aangemaakt';
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      grid.classList.remove('hidden');
+      grid.innerHTML = subjects.map((subject, idx) => createSubjectCardHTML(subject, idx, subjects.length)).join('');
+    }
+
+    function createSubjectCardHTML(subject, idx = 0, total = 1, allowReorder = true) {
+      const palette = TILE_COLORS[subject.color] || TILE_COLORS.purple;
+      const lessonCount = lessons.filter(l => l.subjectId === subject.id).length;
+      const draggableAttrs = (isAdmin && allowReorder)
+        ? `draggable="true" ondragstart="handleDragStart(event, '${subject.id}', 'subject')" ondragend="handleDragEnd(event)" ondragover="handleDragOver(event, '${subject.id}', 'subject')" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${subject.id}', 'subject')"`
+        : '';
+
+      return `
+        <div
+          ${draggableAttrs}
+          onclick="openSubject('${subject.id}')"
+          class="tile-card group relative rounded-3xl bg-white border border-slate-200/90 shadow-sm hover:shadow-xl overflow-hidden cursor-pointer flex flex-col justify-between"
+        >
+          <div class="h-28 bg-gradient-to-r ${palette.bg} p-6 flex items-start justify-between relative overflow-hidden">
+            <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner border border-white/30">
+              ${subject.icon || '📚'}
+            </div>
+            <div class="flex items-center gap-2">
+              ${isAdmin && allowReorder ? `
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/25 text-white backdrop-blur-sm cursor-grab active:cursor-grabbing" title="Sleep tegel">
+                  ⠿ Sleep
+                </span>
+              ` : ''}
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-black/20 text-white backdrop-blur-sm">
+                ${lessonCount} ${lessonCount === 1 ? 'les' : 'lessen'}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="text-xl font-extrabold text-slate-900 group-hover:text-purple-700 transition">
+                ${escapeHTML(subject.name)}
+              </h3>
+              <p class="text-sm text-slate-500 mt-1.5 line-clamp-2">
+                ${escapeHTML(subject.description || 'Bekijk alle interactieve lessen en thema’s voor dit vak.')}
+              </p>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+              <span class="inline-flex items-center gap-1.5 text-sm font-bold text-purple-700 group-hover:translate-x-1 transition-transform">
+                Open lessen
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </span>
+
+              ${isAdmin ? `
+                <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                  ${allowReorder ? `
+                    <button
+                      onclick="moveSubjectStep('${subject.id}', -1)"
+                      ${idx === 0 ? 'disabled' : ''}
+                      class="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-purple-100 hover:text-purple-700 disabled:opacity-30 transition"
+                      title="Verplaats naar voren"
+                    >←</button>
+                    <button
+                      onclick="moveSubjectStep('${subject.id}', 1)"
+                      ${idx === total - 1 ? 'disabled' : ''}
+                      class="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-purple-100 hover:text-purple-700 disabled:opacity-30 transition"
+                      title="Verplaats naar achteren"
+                    >→</button>
+                  ` : ''}
+                  <button
+                    onclick="openSubjectModal('${subject.id}')"
+                    class="p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-purple-100 hover:text-purple-700 transition"
+                    title="Vak bewerken"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    onclick="confirmDeleteSubject('${subject.id}')"
+                    class="p-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 transition"
+                    title="Vak verwijderen"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderLessonsView(subjectId) {
+      const subject = subjects.find(s => s.id === subjectId);
+      if (!subject) {
+        navigateToSubjects();
+        return;
+      }
+
+      const subjectsGrid = document.getElementById('subjectsGrid');
+      const lessonsGrid = document.getElementById('lessonsGrid');
+      const emptyState = document.getElementById('emptyState');
+
+      subjectsGrid.classList.add('hidden');
+      document.getElementById('addSubjectBtn').classList.add('hidden');
+      document.getElementById('backToSubjectsBtn').classList.remove('hidden');
+
+      if (isAdmin) {
+        document.getElementById('addLessonBtn').classList.remove('hidden');
+      } else {
+        document.getElementById('addLessonBtn').classList.add('hidden');
+      }
+
+      document.getElementById('breadcrumbSeparator').classList.remove('hidden');
+      const bcCurrent = document.getElementById('breadcrumbCurrent');
+      bcCurrent.classList.remove('hidden');
+      bcCurrent.textContent = subject.name;
+
+      document.getElementById('pageTitle').innerHTML = `${subject.icon || '📚'} ${escapeHTML(subject.name)}`;
+      document.getElementById('pageSubtitle').textContent = isAdmin
+        ? 'Sleep de lestegels of gebruik de pijltjes om de lesvolgorde te wijzigen.'
+        : (subject.description || 'Klik op een tegel om het interactieve script op een nieuwe pagina te starten.');
+
+      const subjectLessons = lessons.filter(l => l.subjectId === subjectId);
+
+      if (subjectLessons.length === 0) {
+        lessonsGrid.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        document.getElementById('emptyStateTitle').textContent = `Nog geen lessen voor ${subject.name}`;
+        document.getElementById('emptyStateSubtitle').textContent = isAdmin
+          ? 'Klik rechtsboven op "Nieuwe lestegel toevoegen" om een les, thema en koppeling of script in te voeren.'
+          : 'Er zijn nog geen interactieve lessen toegevoegd aan dit vak.';
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      lessonsGrid.classList.remove('hidden');
+      lessonsGrid.innerHTML = subjectLessons.map((lesson, idx) => createLessonCardHTML(lesson, false, idx, subjectLessons.length, true)).join('');
+    }
+
+    function createLessonCardHTML(lesson, showSubjectBadge = false, idx = 0, total = 1, allowReorder = true) {
+      const palette = TILE_COLORS[lesson.color] || TILE_COLORS.teal;
+      const subject = subjects.find(s => s.id === lesson.subjectId);
+      const isEmbeddedScript = lesson.contentType === 'script' && lesson.scriptContent;
+
+      const badgeLabel = showSubjectBadge && subject
+        ? `${subject.icon} ${escapeHTML(subject.name)}`
+        : (isEmbeddedScript ? '⚡ Ingebouwd Script' : '🌐 Externe Website');
+
+      const draggableAttrs = (isAdmin && allowReorder)
+        ? `draggable="true" ondragstart="handleDragStart(event, '${lesson.id}', 'lesson')" ondragend="handleDragEnd(event)" ondragover="handleDragOver(event, '${lesson.id}', 'lesson')" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${lesson.id}', 'lesson')"`
+        : '';
+
+      return `
+        <div
+          ${draggableAttrs}
+          onclick="launchLesson('${lesson.id}')"
+          class="tile-card group relative rounded-3xl bg-gradient-to-br ${palette.bg} text-white shadow-md hover:shadow-2xl p-6 cursor-pointer flex flex-col justify-between min-h-[245px]"
+        >
+          <div>
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-sm border border-white/25">
+                ${badgeLabel}
+              </span>
+
+              <div class="flex items-center gap-1.5">
+                ${isAdmin && allowReorder ? `
+                  <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/20 text-white cursor-grab active:cursor-grabbing" title="Sleep tegel">
+                    ⠿ Sleep
+                  </span>
+                ` : ''}
+                <div class="w-9 h-9 rounded-xl bg-white/20 group-hover:bg-white group-hover:text-slate-900 flex items-center justify-center transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="text-xl font-extrabold leading-snug tracking-tight">
+              ${escapeHTML(lesson.title)}
+            </h3>
+
+            <div class="mt-3 p-3 rounded-2xl bg-black/15 backdrop-blur-sm border border-white/10">
+              <span class="block text-[11px] uppercase tracking-wider font-bold text-white/75 mb-0.5">Besproken thema</span>
+              <p class="text-sm font-medium text-white/95 leading-relaxed">
+                ${escapeHTML(lesson.theme)}
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-3 border-t border-white/20 flex items-center justify-between gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-white/90 group-hover:text-white">
+              ${isEmbeddedScript ? 'Open script' : 'Open website'}
+              <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </span>
+
+            ${isAdmin ? `
+              <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                ${allowReorder ? `
+                  <button
+                    onclick="moveLessonStep('${lesson.id}', -1)"
+                    ${idx === 0 ? 'disabled' : ''}
+                    class="px-2 py-1.5 rounded-xl bg-white/20 hover:bg-white hover:text-slate-900 disabled:opacity-30 font-bold text-xs transition"
+                    title="Verplaats naar voren"
+                  >←</button>
+                  <button
+                    onclick="moveLessonStep('${lesson.id}', 1)"
+                    ${idx === total - 1 ? 'disabled' : ''}
+                    class="px-2 py-1.5 rounded-xl bg-white/20 hover:bg-white hover:text-slate-900 disabled:opacity-30 font-bold text-xs transition"
+                    title="Verplaats naar achteren"
+                  >→</button>
+                ` : ''}
+                <button
+                  onclick="openLessonModal('${lesson.id}')"
+                  class="p-2 rounded-xl bg-white/20 hover:bg-white hover:text-slate-900 transition"
+                  title="Lestegel bewerken"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                </button>
+                <button
+                  onclick="confirmDeleteLesson('${lesson.id}')"
+                  class="p-2 rounded-xl bg-rose-900/40 hover:bg-rose-600 text-white transition"
+                  title="Lestegel verwijderen"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSearchResults() {
+      const q = searchQuery.toLowerCase().trim();
+      document.getElementById('subjectsGrid').classList.add('hidden');
+      document.getElementById('lessonsGrid').classList.add('hidden');
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('searchResultsSection').classList.remove('hidden');
+
+      document.getElementById('pageTitle').textContent = `Zoekresultaten voor "${searchQuery}"`;
+      document.getElementById('pageSubtitle').textContent = 'Directe treffers binnen vakken, lessen en thema’s.';
+
+      const matchedSubjects = subjects.filter(s =>
+        s.name.toLowerCase().includes(q) || (s.description && s.description.toLowerCase().includes(q))
+      );
+      const matchedLessons = lessons.filter(l =>
+        l.title.toLowerCase().includes(q) || l.theme.toLowerCase().includes(q)
+      );
+
+      const sContainer = document.getElementById('searchSubjectsContainer');
+      const lContainer = document.getElementById('searchLessonsContainer');
+      const noRes = document.getElementById('noSearchResults');
+
+      if (matchedSubjects.length > 0) {
+        sContainer.classList.remove('hidden');
+        document.getElementById('searchSubjectsGrid').innerHTML = matchedSubjects.map((s, idx) => createSubjectCardHTML(s, idx, matchedSubjects.length, false)).join('');
+      } else {
+        sContainer.classList.add('hidden');
+      }
+
+      if (matchedLessons.length > 0) {
+        lContainer.classList.remove('hidden');
+        document.getElementById('searchLessonsGrid').innerHTML = matchedLessons.map((l, idx) => createLessonCardHTML(l, true, idx, matchedLessons.length, false)).join('');
+      } else {
+        lContainer.classList.add('hidden');
+      }
+
+      if (matchedSubjects.length === 0 && matchedLessons.length === 0) {
+        noRes.classList.remove('hidden');
+      } else {
+        noRes.classList.add('hidden');
+      }
+    }
+
+    window.launchLesson = function(lessonId) {
+      const lesson = lessons.find(l => l.id === lessonId);
+      if (!lesson) return;
+
+      if (lesson.contentType === 'script' && lesson.scriptContent) {
+        openHtmlScriptInNewTab(lesson.scriptContent);
+      } else if (lesson.url) {
+        const validUrl = lesson.url.startsWith('http://') || lesson.url.startsWith('https://')
+          ? lesson.url
+          : 'https://' + lesson.url;
+        window.open(validUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        showToast('Geen link of script gekoppeld aan deze tegel.');
+      }
+    };
+
+    function openHtmlScriptInNewTab(htmlCode) {
+      const blob = new Blob([htmlCode], { type: 'text/html;charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const win = window.open(blobUrl, '_blank');
+      if (!win) {
+        alert('Pop-up geblokkeerd door je browser. Sta pop-ups toe voor deze pagina om het interactieve script op een nieuw tabblad te openen.');
+      }
+    }
+
+    window.previewDraftScript = function() {
+      const code = document.getElementById('lessonScriptInput').value.trim();
+      if (!code) {
+        showToast('Plak eerst een HTML-script om te testen.');
+        return;
+      }
+      openHtmlScriptInNewTab(code);
+    };
+
+    window.openSubject = function(subjectId) {
+      searchQuery = '';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('mobileSearchInput').value = '';
+      currentSubjectId = subjectId;
+      renderCurrentView();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.navigateToSubjects = function() {
+      searchQuery = '';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('mobileSearchInput').value = '';
+      currentSubjectId = null;
+      renderCurrentView();
+    };
+
+    window.handleSearch = function(val) {
+      searchQuery = val;
+      document.getElementById('searchInput').value = val;
+      document.getElementById('mobileSearchInput').value = val;
+      renderCurrentView();
+    };
+
+    function updateAdminUI() {
+      const loginBtn = document.getElementById('loginBtn');
+      const adminBar = document.getElementById('adminActiveBar');
+      if (isAdmin) {
+        loginBtn.classList.add('hidden');
+        adminBar.classList.remove('hidden');
+        adminBar.classList.add('flex');
+      } else {
+        loginBtn.classList.remove('hidden');
+        adminBar.classList.add('hidden');
+        adminBar.classList.remove('flex');
+      }
+    }
+
+    window.openLoginModal = function() {
+      document.getElementById('loginErrorMsg').classList.add('hidden');
+      document.getElementById('adminPasswordInput').value = '';
+      document.getElementById('loginModal').classList.remove('hidden');
+      document.getElementById('loginModal').classList.add('flex');
+      setTimeout(() => document.getElementById('adminPasswordInput').focus(), 100);
+    };
+
+    window.closeLoginModal = function() {
+      document.getElementById('loginModal').classList.add('hidden');
+      document.getElementById('loginModal').classList.remove('flex');
+    };
+
+    window.handleAdminLogin = function(e) {
+      e.preventDefault();
+      const pw = document.getElementById('adminPasswordInput').value;
+      if (pw === 'mon1234!') {
+        isAdmin = true;
+        sessionStorage.setItem('mondriaan_lsb_admin', 'true');
+        closeLoginModal();
+        renderCurrentView();
+        showToast('Ingelogd in de beheersmodule');
+      } else {
+        document.getElementById('loginErrorMsg').classList.remove('hidden');
+      }
+    };
+
+    window.logoutAdmin = function() {
+      isAdmin = false;
+      sessionStorage.removeItem('mondriaan_lsb_admin');
+      renderCurrentView();
+      showToast('Beheersmodule afgesloten');
+    };
+
+    function renderPickers(selectedIcon, selectedSubjectColor, selectedLessonColor) {
+      document.getElementById('iconPicker').innerHTML = SUBJECT_ICONS.map(ic => `
+        <button
+          type="button"
+          onclick="selectSubjectIcon('${ic}')"
+          class="h-10 rounded-xl text-xl flex items-center justify-center border transition ${ic === selectedIcon ? 'border-purple-600 bg-purple-100 scale-105' : 'border-slate-200 hover:bg-slate-50'}"
+        >${ic}</button>
+      `).join('');
+
+      document.getElementById('subjectColorPicker').innerHTML = Object.entries(TILE_COLORS).map(([key, val]) => `
+        <button
+          type="button"
+          onclick="selectSubjectColor('${key}')"
+          class="h-10 rounded-xl ${val.swatch} flex items-center justify-center text-white font-bold text-xs shadow-sm transition ${key === selectedSubjectColor ? 'ring-4 ring-offset-2 ring-slate-900 scale-105' : 'opacity-85 hover:opacity-100'}"
+          title="${val.name}"
+        >${key === selectedSubjectColor ? '✓' : ''}</button>
+      `).join('');
+
+      document.getElementById('lessonColorPicker').innerHTML = Object.entries(TILE_COLORS).map(([key, val]) => `
+        <button
+          type="button"
+          onclick="selectLessonColor('${key}')"
+          class="h-10 rounded-xl ${val.swatch} flex items-center justify-center text-white font-bold text-xs shadow-sm transition ${key === selectedLessonColor ? 'ring-4 ring-offset-2 ring-slate-900 scale-105' : 'opacity-85 hover:opacity-100'}"
+          title="${val.name}"
+        >${key === selectedLessonColor ? '✓' : ''}</button>
+      `).join('');
+    }
+
+    window.selectSubjectIcon = function(ic) {
+      document.getElementById('subjectIconInput').value = ic;
+      renderPickers(ic, document.getElementById('subjectColorInput').value, document.getElementById('lessonColorInput').value);
+    };
+
+    window.selectSubjectColor = function(colorKey) {
+      document.getElementById('subjectColorInput').value = colorKey;
+      renderPickers(document.getElementById('subjectIconInput').value, colorKey, document.getElementById('lessonColorInput').value);
+    };
+
+    window.selectLessonColor = function(colorKey) {
+      document.getElementById('lessonColorInput').value = colorKey;
+      renderPickers(document.getElementById('subjectIconInput').value, document.getElementById('subjectColorInput').value, colorKey);
+    };
+
+    window.openSubjectModal = function(subjectId = null) {
+      if (!isAdmin) return;
+      const modal = document.getElementById('subjectModal');
+      if (subjectId) {
+        const s = subjects.find(item => item.id === subjectId);
+        document.getElementById('subjectModalTitle').textContent = 'Vak bewerken';
+        document.getElementById('editSubjectId').value = s.id;
+        document.getElementById('subjectNameInput').value = s.name;
+        document.getElementById('subjectDescInput').value = s.description || '';
+        document.getElementById('subjectIconInput').value = s.icon || '🏃';
+        document.getElementById('subjectColorInput').value = s.color || 'purple';
+        renderPickers(s.icon || '🏃', s.color || 'purple', 'teal');
+      } else {
+        document.getElementById('subjectModalTitle').textContent = 'Nieuw vak toevoegen';
+        document.getElementById('editSubjectId').value = '';
+        document.getElementById('subjectNameInput').value = '';
+        document.getElementById('subjectDescInput').value = '';
+        document.getElementById('subjectIconInput').value = '🏃';
+        document.getElementById('subjectColorInput').value = 'purple';
+        renderPickers('🏃', 'purple', 'teal');
+      }
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    window.closeSubjectModal = function() {
+      document.getElementById('subjectModal').classList.add('hidden');
+      document.getElementById('subjectModal').classList.remove('flex');
+    };
+
+    window.saveSubject = async function(e) {
+      e.preventDefault();
+      if (!isAdmin) return;
+
+      const existingId = document.getElementById('editSubjectId').value;
+      const name = document.getElementById('subjectNameInput').value.trim();
+      const description = document.getElementById('subjectDescInput').value.trim();
+      const icon = document.getElementById('subjectIconInput').value;
+      const color = document.getElementById('subjectColorInput').value;
+
+      const existingObj = existingId ? subjects.find(s => s.id === existingId) : null;
+      const subjectObj = {
+        id: existingId || 'vak-' + Date.now(),
+        name,
+        description,
+        icon,
+        color,
+        order: existingObj ? existingObj.order : subjects.length
+      };
+
+      await persistSubject(subjectObj);
+      closeSubjectModal();
+      showToast(existingId ? 'Vak bijgewerkt' : 'Nieuw vak toegevoegd');
+    };
+
+    window.confirmDeleteSubject = async function(subjectId) {
+      if (!isAdmin) return;
+      const s = subjects.find(item => item.id === subjectId);
+      if (confirm(`Weet je zeker dat je het vak "${s.name}" en alle bijbehorende lestegels wilt verwijderen?`)) {
+        await removeSubject(subjectId);
+        showToast('Vak verwijderd');
+      }
+    };
+
+    window.switchLessonContentType = function(type) {
+      document.getElementById('lessonTypeInput').value = type;
+      const tabUrl = document.getElementById('tabTypeUrl');
+      const tabScript = document.getElementById('tabTypeScript');
+      const urlBox = document.getElementById('urlInputContainer');
+      const scriptBox = document.getElementById('scriptInputContainer');
+
+      if (type === 'script') {
+        tabScript.className = 'py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition bg-white text-purple-700 shadow-sm';
+        tabUrl.className = 'py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition text-slate-600 hover:text-slate-900';
+        urlBox.classList.add('hidden');
+        scriptBox.classList.remove('hidden');
+        updateScriptSizeIndicator();
+      } else {
+        tabUrl.className = 'py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition bg-white text-purple-700 shadow-sm';
+        tabScript.className = 'py-2.5 px-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition text-slate-600 hover:text-slate-900';
+        scriptBox.classList.add('hidden');
+        urlBox.classList.remove('hidden');
+      }
+    };
+
+    function updateScriptSizeIndicator() {
+      const val = document.getElementById('lessonScriptInput').value || '';
+      const bytes = new Blob([val]).size;
+      const kb = (bytes / 1024).toFixed(1);
+      const el = document.getElementById('scriptSizeIndicator');
+      el.textContent = `${kb} KB / 950 KB max`;
+      el.className = bytes > 950 * 1024 ? 'font-mono text-rose-600 font-bold' : 'font-mono text-slate-400';
+    }
+
+    document.getElementById('lessonScriptInput').addEventListener('input', updateScriptSizeIndicator);
+
+    window.loadHtmlFileIntoTextarea = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('lessonScriptInput').value = e.target.result;
+        updateScriptSizeIndicator();
+        showToast(`Bestand "${file.name}" ingeladen`);
+      };
+      reader.readAsText(file);
+    };
+
+    window.openLessonModal = function(lessonId = null) {
+      if (!isAdmin || !currentSubjectId) return;
+      const subject = subjects.find(s => s.id === currentSubjectId);
+      document.getElementById('lessonModalSubjectLabel').textContent = `Vak: ${subject ? subject.name : ''}`;
+
+      const modal = document.getElementById('lessonModal');
+      if (lessonId) {
+        const l = lessons.find(item => item.id === lessonId);
+        document.getElementById('lessonModalTitle').textContent = 'Lestegel bewerken';
+        document.getElementById('editLessonId').value = l.id;
+        document.getElementById('lessonTitleInput').value = l.title;
+        document.getElementById('lessonThemeInput').value = l.theme;
+        document.getElementById('lessonUrlInput').value = l.url || '';
+        document.getElementById('lessonScriptInput').value = l.scriptContent || '';
+        document.getElementById('lessonColorInput').value = l.color || 'teal';
+        switchLessonContentType(l.contentType === 'script' ? 'script' : 'url');
+        renderPickers('🏃', 'purple', l.color || 'teal');
+      } else {
+        document.getElementById('lessonModalTitle').textContent = 'Nieuwe lestegel toevoegen';
+        document.getElementById('editLessonId').value = '';
+        document.getElementById('lessonTitleInput').value = '';
+        document.getElementById('lessonThemeInput').value = '';
+        document.getElementById('lessonUrlInput').value = '';
+        document.getElementById('lessonScriptInput').value = '';
+        switchLessonContentType('url');
+        const colorKeys = Object.keys(TILE_COLORS);
+        const randomColor = colorKeys[lessons.length % colorKeys.length];
+        document.getElementById('lessonColorInput').value = randomColor;
+        renderPickers('🏃', 'purple', randomColor);
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    window.closeLessonModal = function() {
+      document.getElementById('lessonModal').classList.add('hidden');
+      document.getElementById('lessonModal').classList.remove('flex');
+    };
+
+    window.saveLesson = async function(e) {
+      e.preventDefault();
+      if (!isAdmin || !currentSubjectId) return;
+
+      const existingId = document.getElementById('editLessonId').value;
+      const title = document.getElementById('lessonTitleInput').value.trim();
+      const theme = document.getElementById('lessonThemeInput').value.trim();
+      const contentType = document.getElementById('lessonTypeInput').value;
+      const url = document.getElementById('lessonUrlInput').value.trim();
+      const scriptContent = document.getElementById('lessonScriptInput').value;
+      const color = document.getElementById('lessonColorInput').value;
+
+      if (contentType === 'url' && !url) {
+        alert('Vul een geldige website-URL in of kies voor "Eigen HTML/JS script plakken".');
+        return;
+      }
+
+      if (contentType === 'script') {
+        if (!scriptContent.trim()) {
+          alert('Plak eerst een HTML-script in het tekstveld.');
+          return;
+        }
+        const byteSize = new Blob([scriptContent]).size;
+        if (byteSize > 950 * 1024) {
+          alert('Het script is groter dan 950 KB.');
+          return;
+        }
+      }
+
+      const existingObj = existingId ? lessons.find(l => l.id === existingId) : null;
+      const lessonObj = {
+        id: existingId || 'les-' + Date.now(),
+        subjectId: currentSubjectId,
+        title,
+        theme,
+        contentType,
+        url: contentType === 'url' ? url : '',
+        scriptContent: contentType === 'script' ? scriptContent : '',
+        color,
+        order: existingObj ? existingObj.order : lessons.filter(l => l.subjectId === currentSubjectId).length
+      };
+
+      await persistLesson(lessonObj);
+      closeLessonModal();
+      showToast(existingId ? 'Lestegel bijgewerkt' : 'Lestegel toegevoegd');
+    };
+
+    window.confirmDeleteLesson = async function(lessonId) {
+      if (!isAdmin) return;
+      const l = lessons.find(item => item.id === lessonId);
+      if (confirm(`Weet je zeker dat je de lestegel "${l.title}" wilt verwijderen?`)) {
+        await removeLesson(lessonId);
+        showToast('Lestegel verwijderd');
+      }
+    };
+
+    window.openFirewallHelpModal = function() {
+      document.getElementById('firewallHelpModal').classList.remove('hidden');
+      document.getElementById('firewallHelpModal').classList.add('flex');
+    };
+
+    window.closeFirewallHelpModal = function() {
+      document.getElementById('firewallHelpModal').classList.add('hidden');
+      document.getElementById('firewallHelpModal').classList.remove('flex');
+    };
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    initStorage();
+  </script>
+</body>
+</html>
